@@ -1,11 +1,12 @@
 import numpy as np
 from agent import DQNAgent
 import gymnasium as gym
-from gymnasium.envs.registration import register
 
 from frame_stack import make_env
 from utils import plot_learning_curve
 
+
+from gymnasium.envs.registration import register
 
 register(
     id="snakegame-v0",
@@ -26,7 +27,7 @@ if __name__ == "__main__":
         lr=0.00005,
         input_dims=(env.observation_space.shape),
         n_actions=env.action_space.n,
-        mem_size=100_000,
+        mem_size=10000,
         eps_min=0.1,
         batch_size=32,
         replace=1000,

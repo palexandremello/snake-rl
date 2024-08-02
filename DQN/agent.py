@@ -1,7 +1,8 @@
 import numpy as np
 import torch as T
-from network import DQNetwork
-from replay_memory import ReplayBuffer
+
+from DQN.network import DQNetwork
+from DQN.replay_memory import ReplayBuffer
 
 
 

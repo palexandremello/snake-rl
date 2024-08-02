@@ -110,7 +110,7 @@ class SnakeGameEnv(gym.Env):
 if __name__ == "__main__":
     env = gym.make(
         "snakegame-v0", render_mode="human"
-    )  # Troque para 'image' para observar como imagem
+    )  
 
     obs, _ = env.reset()
 
