@@ -1,12 +1,13 @@
 import numpy as np
 import torch as T
 
-from DQN.network import DQNetwork
-from DQN.replay_memory import ReplayBuffer
+from network import DuelingDQNetwork
+from replay_memory import ReplayBuffer
 
 
 
-class DQNAgent:
+
+class DuelingDDQNAgent:
 
     def __init__(self, gamma, epsilon, lr, n_actions, input_dims,
                  mem_size, batch_size, eps_min=0.01, eps_dec=1e-5,
@@ -29,11 +30,11 @@ class DQNAgent:
 
         self.memory = ReplayBuffer(mem_size, input_dims, n_actions)
 
-        self.q_eval = DQNetwork(self.lr, self.n_actions, input_dims=self.input_dims,
+        self.q_eval = DuelingDQNetwork(self.lr, self.n_actions, input_dims=self.input_dims,
                                 name=self.env_name+ '_'+self.algo+'_q_eval',
                                 chkpt_dir=self.chkpt_dir)
         
-        self.q_next = DQNetwork(self.lr, self.n_actions, input_dims=self.input_dims,
+        self.q_next = DuelingDQNetwork(self.lr, self.n_actions, input_dims=self.input_dims,
                                 name=self.env_name+ '_'+self.algo+'_q_next',
                                 chkpt_dir=self.chkpt_dir)
         
@@ -41,8 +42,8 @@ class DQNAgent:
     def choose_action(self, observation):
         if np.random.random() > self.epsilon:
             state = T.tensor([observation], dtype=T.float).to(self.q_eval.device)
-            actions = self.q_eval.forward(state)
-            action = T.argmax(actions).item()
+            _, advantage = self.q_eval.forward(state)
+            action = T.argmax(advantage).item() 
         
         else:
             action = np.random.choice(self.action_space)
@@ -89,7 +90,6 @@ class DQNAgent:
         self.q_next.load_checkpoint()
     
 
-
     def learn(self):
 
         if self.memory.mem_cntr < self.batch_size:
@@ -100,16 +100,28 @@ class DQNAgent:
 
         self.replace_target_network()
 
-        states, actions, rewards, sates_, dones = self.sample_memory()
+        states, actions, rewards, states_, dones = self.sample_memory()
 
         indices = np.arange(self.batch_size)
-        q_pred = self.q_eval.forward(states)[indices, actions]
+
+
+        V_s, A_s = self.q_eval.forward(states)
+        V_s_, A_s_ = self.q_next.forward(states_)
         
-        q_next = self.q_next.forward(sates_).max(dim=1)[0]
+        V_s_eval, A_s_eval = self.q_eval.forward(states_)
+
+        q_pred = T.add(V_s, (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
+
+        q_next = T.add(V_s_, (A_s_ - A_s_.mean(dim=1, keepdim=True)))
+
+
+        q_eval = T.add(V_s_eval, (A_s_eval - A_s_eval.mean(dim=1, keepdim=True)))
+
+        max_actions = T.argmax(q_eval, dim=1)
 
         q_next[dones] = 0.0
+        q_target = rewards + self.gamma * q_next[indices, max_actions]
 
-        q_target = rewards + self.gamma * q_next 
 
         loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)
         loss.backward()
