@@ -7,10 +7,14 @@ from enum import Enum
 
 # Actions the Snake can perform
 class SnakeAction(Enum):
-    LEFT = 0
-    DOWN = 1
-    RIGHT = 2
-    UP = 3
+    UP = 0
+    RIGHT = 1
+    DOWN = 2
+    LEFT = 3
+
+import os
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+
 
 
 class SnakeGame:
@@ -94,6 +98,7 @@ class SnakeGame:
 
             if (pos_apple_x, pos_apple_y) not in self.snake_segments:
                 return pos_apple_x, pos_apple_y
+
 
     def step(self, action: SnakeAction):
         if action == SnakeAction.LEFT and self.last_dir_x != self.block_size:
@@ -199,5 +204,6 @@ if __name__ == "__main__":
 
     while not snake_game.game_over:
         action = random.choice(list(SnakeAction))
+        print("Action = ", action)
         snake_game.step(action)
         snake_game.render()

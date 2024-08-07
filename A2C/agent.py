@@ -26,7 +26,7 @@ def plot_learning_curve(scores, x, figure_file):
 if __name__ == '__main__':
     env = make_env("snakegame-v0")
 
-    n_games = 3000
+    n_games = 5000
 
     agent = PolicyGradientAgent(gamma=0.99, lr=0.0005,
                                 input_dims=(env.observation_space.shape),
@@ -42,13 +42,14 @@ if __name__ == '__main__':
         done = False
         observation, _ = env.reset()
         score = 0 
+        n_steps = 0
         while not done:
             action = agent.choose_action(observation)
             observation_, reward, done, _, info = env.step(action)
             score += reward
             agent.store_rewards(reward)
             observation = observation_
-        
+            n_steps += 1
         agent.learn()
         scores.append(score)
 

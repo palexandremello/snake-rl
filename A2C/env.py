@@ -6,12 +6,13 @@ from gymnasium.utils.env_checker import check_env
 
 import snake_game as sg
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 register(
     id="snakegame-v0",
     entry_point="env:SnakeGameEnv",
 )
+
 
 
 class SnakeGameEnv(gym.Env):
@@ -20,11 +21,11 @@ class SnakeGameEnv(gym.Env):
         "render_fps": 15,
     }
 
-    def __init__(self, grid_rows=32, grid_cols=32, render_mode=None):
+    def __init__(self, grid_rows=10, grid_cols=10, render_mode='human'):
         self.grid_rows = grid_rows
         self.grid_cols = grid_cols
         self.render_mode = render_mode
-        self.snake_game = sg.SnakeGame(
+        self.snake_game: sg = sg.SnakeGame(
             grid_height=grid_rows, grid_width=grid_cols, fps=self.metadata["render_fps"]
         )
 
@@ -72,10 +73,10 @@ class SnakeGameEnv(gym.Env):
             reward = -10
 
         if self.snake_game.got_apple:
-            reward += 10
+            reward += 50
             self.steps_since_last_apple = 0
 
-        reward -= 0.03
+        reward += 1
 
         if self.render_mode == "human":
             self.render()
@@ -85,6 +86,8 @@ class SnakeGameEnv(gym.Env):
         distance_penalty = self.__calculate_distance_reward()
 
         total_reward = reward + distance_penalty
+
+        info["n_steps"] = self.steps_since_last_apple
 
         return obs, total_reward, terminated, False, info
 
@@ -100,7 +103,7 @@ class SnakeGameEnv(gym.Env):
         if distance >= 1 and distance < 10:
             return 0.03
 
-        return -0.03
+        return -0.05
 
 
 if __name__ == "__main__":

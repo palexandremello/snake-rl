@@ -4,8 +4,26 @@ import gymnasium as gym
 import cv2
 
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def plot_frame(frame):
+    """
+    Plota um único frame de dados com dimensões (X, Y, Channels).
+
+    Args:
+        frame (numpy.ndarray): Um array de formato (X, Y, Channels), representando uma imagem RGB.
+    """
+    plt.figure(figsize=(6, 6))  # Ajuste o tamanho da figura conforme necessário
+    plt.imshow(frame[0, :, :], cmap='gray') # Exibe a imagem
+    plt.axis('off')    # Remove os eixos para uma visualização mais limpa
+    plt.show()
+
+
+
 class RepeatActionAndMaxFrame(gym.Wrapper):
-    def __init__(self, env=None, repeat=4, clip_reward=False, no_ops=0):
+    def __init__(self, env=None, repeat=4, clip_reward=True, no_ops=0):
         super(RepeatActionAndMaxFrame, self).__init__(env)
         self.repeat = repeat
         self.shape = env.observation_space.low.shape
@@ -22,7 +40,7 @@ class RepeatActionAndMaxFrame(gym.Wrapper):
             obs, reward, done, truncated, info = self.env.step(action)
 
             if self.clip_reward:
-                reward = np.clip(np.array([reward]), -90, 90)[0]
+                reward = np.clip(np.array([reward]), -1, 1)[0]
 
             t_reward += reward
             idx = i % 2
@@ -109,7 +127,7 @@ def make_env(
     no_ops=0,
 ):
     env = gym.make(env_name)
-    env = RepeatActionAndMaxFrame(env, repeat, clip_rewards, no_ops)
+#    env = RepeatActionAndMaxFrame(env, repeat, clip_rewards, no_ops)
     env = PreprocessFrame(shape, env)
     env = StackFrames(env, repeat)
     return env
