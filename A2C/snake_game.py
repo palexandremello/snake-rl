@@ -4,7 +4,6 @@ import numpy as np
 import sys
 from enum import Enum
 
-
 # Actions the Snake can perform
 class SnakeAction(Enum):
     UP = 0
@@ -14,8 +13,6 @@ class SnakeAction(Enum):
 
 import os
 os.environ["SDL_VIDEODRIVER"] = "dummy"
-
-
 
 class SnakeGame:
     def __init__(self, grid_width=32, grid_height=32, block_size=10, fps=15):
@@ -99,7 +96,6 @@ class SnakeGame:
             if (pos_apple_x, pos_apple_y) not in self.snake_segments:
                 return pos_apple_x, pos_apple_y
 
-
     def step(self, action: SnakeAction):
         if action == SnakeAction.LEFT and self.last_dir_x != self.block_size:
             self.dir_snake_x = -self.block_size
@@ -134,7 +130,7 @@ class SnakeGame:
             and self.pos_snake_y == self.pos_apple_y
         ):
             self.pos_apple_x, self.pos_apple_y = self._get_apple_position_near_snake()
-            self.score += 10
+            self.score += 1
             self.got_apple = True
         else:
             self.snake_segments.pop()
@@ -197,6 +193,47 @@ class SnakeGame:
     def get_apple_position(self):
         return (self.pos_apple_x, self.pos_apple_y)
 
+    def get_observation(self):
+        apple_direction = self._get_apple_direction()
+        danger = self._get_danger()
+
+        observation = [
+            int(apple_direction["left"]),
+            int(apple_direction["right"]),
+            int(apple_direction["down"]),
+            int(apple_direction["up"]),
+            int(danger["down"]),
+            int(danger["up"]),
+            int(danger["left"]),
+            int(danger["right"]),
+        ]
+        return observation
+
+    def _get_apple_direction(self):
+        head_x, head_y = self.snake_segments[0]
+        apple_direction = {
+            "left": head_x > self.pos_apple_x,
+            "right": head_x < self.pos_apple_x,
+            "up": head_y > self.pos_apple_y,
+            "down": head_y < self.pos_apple_y,
+        }
+        return apple_direction
+
+    def _get_danger(self):
+        danger = {
+            "left": self._is_danger(self.pos_snake_x - self.block_size, self.pos_snake_y),
+            "right": self._is_danger(self.pos_snake_x + self.block_size, self.pos_snake_y),
+            "up": self._is_danger(self.pos_snake_x, self.pos_snake_y - self.block_size),
+            "down": self._is_danger(self.pos_snake_x, self.pos_snake_y + self.block_size),
+        }
+        return danger
+
+    def _is_danger(self, x, y):
+        if x < 0 or x >= self.grid_width or y < 0 or y >= self.grid_height:
+            return True
+        if (x, y) in self.snake_segments:
+            return True
+        return False
 
 if __name__ == "__main__":
     snake_game = SnakeGame()
@@ -204,6 +241,7 @@ if __name__ == "__main__":
 
     while not snake_game.game_over:
         action = random.choice(list(SnakeAction))
-        print("Action = ", action)
+        observation = snake_game.get_observation()
+        print("Observation: ", observation)
         snake_game.step(action)
         snake_game.render()

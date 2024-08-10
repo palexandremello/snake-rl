@@ -27,9 +27,10 @@ if __name__ == '__main__':
     env = make_env("snakegame-v0")
 
     n_games = 5000
+    best_score = -np.inf
 
     agent = PolicyGradientAgent(gamma=0.99, lr=0.0005,
-                                input_dims=(env.observation_space.shape),
+                                input_dims=env.observation_space.shape,
                                 n_actions=env.action_space.n)
     
 
@@ -54,7 +55,10 @@ if __name__ == '__main__':
         scores.append(score)
 
         avg_score = np.mean(scores[-100:])
-        print('episode ', i, 'score %.2f' % score, 'average score %.2f' % avg_score, 'score points ', info['score'])
+        print('episode ', i, 'score %.2f' % score, 'average score %.2f' % avg_score, 'best score %.2f' % best_score, 'score points ', info['score'])
+        if avg_score > best_score:
+            agent.save_model()
+            best_score = avg_score
 
     
     x = [i+1 for i in range(len(scores))]

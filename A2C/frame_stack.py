@@ -128,6 +128,6 @@ def make_env(
 ):
     env = gym.make(env_name)
 #    env = RepeatActionAndMaxFrame(env, repeat, clip_rewards, no_ops)
-    env = PreprocessFrame(shape, env)
-    env = StackFrames(env, repeat)
+    #env = PreprocessFrame(shape, env)
+    #env = StackFrames(env, repeat)
     return env
